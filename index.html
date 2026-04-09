@@ -1,41 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cervical Cancer Screening Checker</title>
+  <title>SafeCervix - Screening Ghana</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      font-family: Arial;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #fce4ec, #f8bbd0);
       text-align: center;
-      padding: 20px;
-      background-color: #f5f5f5;
+      margin: 0;
     }
+
     .container {
       background: white;
+      margin: 30px auto;
       padding: 20px;
-      border-radius: 10px;
-      max-width: 500px;
-      margin: auto;
+      border-radius: 15px;
+      max-width: 550px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
+
+    h2 { color: #c2185b; }
+
     button {
-      padding: 10px;
-      margin: 10px;
-      width: 80%;
+      display: block;
+      width: 90%;
+      margin: 10px auto;
+      padding: 12px;
       border: none;
       background: #e91e63;
       color: white;
-      border-radius: 5px;
       font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
     }
+
+    button:hover { background: #ad1457; }
+
     #result {
       margin-top: 20px;
       font-weight: bold;
     }
-    iframe {
+
+    .hidden { display: none; }
+
+    a.whatsapp {
+      display: block;
+      margin: 10px;
+      padding: 10px;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+
+    #chatbox {
+      margin-top: 15px;
+      text-align: left;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    input {
+      width: 75%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    footer {
       margin-top: 20px;
-      width: 100%;
-      height: 300px;
-      border: 0;
+      font-size: 12px;
+      color: gray;
     }
   </style>
 </head>
@@ -43,8 +82,8 @@
 <body>
 
 <div class="container">
-  <h2>🩺 Cervical Cancer Screening Check</h2>
-  <p>When last did you check your cervix?</p>
+  <h2>🩺 SafeCervix Screening Check</h2>
+  <p><b>When last did you check your cervix?</b></p>
 
   <button onclick="check('never')">Never</button>
   <button onclick="check('1year')">Less than 1 year ago</button>
@@ -53,13 +92,34 @@
 
   <div id="result"></div>
 
-  <iframe 
-    src="https://www.google.com/maps?q=Korle-Bu+Teaching+Hospital&output=embed">
-  </iframe>
+  <div id="actions" class="hidden">
 
+    <button onclick="findLocation()">📍 Find Nearest Hospital</button>
+    <div id="map"></div>
+
+    <h3>💬 Chat with a Nurse</h3>
+    <a class="whatsapp" href="https://wa.me/233240576377" target="_blank">Chat Nurse 1</a>
+    <a class="whatsapp" href="https://wa.me/233249015463" target="_blank">Chat Nurse 2</a>
+
+    <button onclick="setReminder()">⏰ Set Screening Reminder</button>
+
+    <!-- CHATBOT -->
+    <h3>🤖 Ask SafeCervix</h3>
+    <input type="text" id="userInput" placeholder="Ask about cervical cancer...">
+    <button onclick="askBot()">Ask</button>
+
+    <div id="chatbox"></div>
+
+  </div>
+
+  <footer>
+    Early detection saves lives 💗
+  </footer>
 </div>
 
 <script>
+
+// SCREENING CHECK
 function check(answer) {
   let message = "";
 
@@ -67,17 +127,113 @@ function check(answer) {
     message = "⚠️ You have never screened. Please visit a health facility immediately.";
   } 
   else if (answer === "1year") {
-    message = "✅ Good! Continue regular screening as advised.";
+    message = "✅ Good! Keep screening regularly.";
   } 
   else if (answer === "3years") {
-    message = "⚠️ You are due for screening. Visit a clinic soon.";
+    message = "⚠️ You are due for screening.";
   } 
   else {
-    message = "🚨 You need screening urgently. Please go to a hospital.";
+    message = "🚨 Urgent! Please go to a hospital.";
   }
 
   document.getElementById("result").innerText = message;
+  document.getElementById("actions").classList.remove("hidden");
+
+  // Save data
+  localStorage.setItem("lastCheck", answer);
+  localStorage.setItem("timestamp", new Date());
 }
+
+
+// 📍 FIND NEAREST HOSPITAL
+function findLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else {
+    alert("Geolocation not supported");
+  }
+}
+
+function showPosition(position) {
+  let lat = position.coords.latitude;
+  let lon = position.coords.longitude;
+
+  let mapLink = `
+    <iframe width="100%" height="300"
+    src="https://maps.google.com/maps?q=hospital&ll=${lat},${lon}&z=13&output=embed"></iframe>
+  `;
+
+  document.getElementById("map").innerHTML = mapLink;
+}
+
+
+// ⏰ REMINDER SYSTEM
+function setReminder() {
+  let days = prompt("Set reminder in how many days?");
+  
+  if (days) {
+    let ms = days * 24 * 60 * 60 * 1000;
+
+    setTimeout(() => {
+      alert("⏰ Reminder: Time to check your cervix!");
+    }, ms);
+
+    alert("Reminder set!");
+  }
+}
+
+
+// 🤖 CHATBOT
+function askBot() {
+  let input = document.getElementById("userInput").value.toLowerCase();
+  let response = "";
+
+  if (input.includes("what is") && input.includes("cervical")) {
+    response = "Cervical cancer is a disease where abnormal cells grow in the cervix, usually caused by long-term HPV infection.";
+  }
+  else if (input.includes("symptom")) {
+    response = "Common symptoms include abnormal vaginal bleeding, pelvic pain, pain during sex, and unusual vaginal discharge.";
+  }
+  else if (input.includes("cause")) {
+    response = "The main cause is persistent HPV infection, transmitted through sexual contact.";
+  }
+  else if (input.includes("prevent")) {
+    response = "Prevent it through HPV vaccination, regular screening, and safe sexual practices.";
+  }
+  else if (input.includes("screen")) {
+    response = "Screening includes Pap smear and HPV testing at health facilities.";
+  }
+  else if (input.includes("hpv")) {
+    response = "HPV is a common virus spread through sexual contact and is the main cause of cervical cancer.";
+  }
+  else if (input.includes("who is at risk") || input.includes("at risk") || input.includes("risk group")) {
+    response = "Sexually active women are at risk, especially those with multiple partners, early sexual activity, weak immunity, or no regular screening.";
+  }
+  else if (input.includes("risk")) {
+    response = "Risk factors include HPV infection, early sexual activity, multiple partners, smoking, HIV/weak immunity, long-term contraceptive use, many births, and lack of screening.";
+  }
+  else {
+    response = "Ask me about cervical cancer, symptoms, causes, risk factors, prevention, HPV, or screening.";
+  }
+
+  let chatbox = document.getElementById("chatbox");
+
+  chatbox.innerHTML += "<p><b>You:</b> " + input + "</p>";
+  chatbox.innerHTML += "<p><b>SafeCervix Bot:</b> " + response + "</p>";
+
+  document.getElementById("userInput").value = "";
+}
+
+
+// LOAD SAVED DATA
+window.onload = function() {
+  let last = localStorage.getItem("lastCheck");
+  if (last) {
+    document.getElementById("result").innerText =
+      "Previous response: " + last;
+  }
+}
+
 </script>
 
 </body>
